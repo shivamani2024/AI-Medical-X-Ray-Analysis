@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Medical - Patient Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .gradcam-box {
+            margin-top: 24px;
+        }
+
+        .gradcam-box.hidden {
+            display: none;
+        }
+
+        #gradcamImageContainer {
+            margin-top: 16px;
+            min-height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #gradcamImageContainer img {
+            width: 100%;
+            max-width: 850px;
+            max-height: 600px;
+            object-fit: contain;
+            border-radius: 12px;
+            display: block;
+        }
+    </style>
+</head>
+
+<body class="dashboard-body">
+
+    <!-- =========================================
+         SIDEBAR
+         ========================================= -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="medical-logo">+</div>
+            <div>
+                <h2>AI Medical</h2>
+                <span>Patient Portal</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <button class="nav-item active" onclick="showSection('dashboard')">
+                <span>🏠</span> Dashboard
+            </button>
+            <button class="nav-item" onclick="showSection('analysis')">
+                <span>🩻</span> X-Ray Analysis
+            </button>
+            <button class="nav-item" onclick="showSection('history')">
+                <span>📋</span> History
+            </button>
+            <button class="nav-item" onclick="showSection('profile')">
+                <span>👤</span> Patient Profile
+            </button>
+            <button class="nav-item" onclick="showSection('reports')">
+                <span>📄</span> Reports
+            </button>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button class="nav-item logout-button" onclick="logout()">
+                <span>🚪</span> Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- =========================================
+         MAIN CONTENT
+         ========================================= -->
+    <main class="dashboard-main">
+
+        <!-- HEADER -->
+        <header class="dashboard-header">
+            <button class="mobile-back-button" onclick="showSection('dashboard')">
+                ← Dashboard
+            </button>
+            <div>
+                <h1 id="pageTitle">Dashboard</h1>
+                <p id="pageSubtitle">Your medical analysis overview</p>
+            </div>
+            <div class="header-patient">
+                <div class="patient-avatar">👤</div>
+                <div>
+                    <strong id="headerName">Patient</strong>
+                    <small id="headerPatientId">PAT-00000</small>
+                </div>
+            </div>
+        </header>
+
+        <!-- =====================================
+             1. DASHBOARD OVERVIEW SECTION
+             ===================================== -->
+        <section id="dashboardSection" class="dashboard-section">
+            <div class="welcome-card">
+                <div>
+                    <span class="section-badge">Patient Dashboard</span>
+                    <h2 id="welcomeName">Welcome!</h2>
+                    <p>Manage your X-ray analyses, reports and patient information from one secure place.</p>
+                </div>
+                <button class="btn btn-primary" onclick="showSection('analysis')">
+                    🩻 New X-Ray Analysis
+                </button>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🩻</div>
+                    <div>
+                        <span>Total Analyses</span>
+                        <strong id="totalAnalyses">0</strong>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div>
+                        <span>Latest Result</span>
+                        <strong id="latestResult">No analysis</strong>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👤</div>
+                    <div>
+                        <span>Patient ID</span>
+                        <strong id="dashboardPatientId">-</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div>
+                        <h3>Quick Analysis</h3>
+                        <p>Upload a chest X-ray to begin.</p>
+                    </div>
+                    <span class="card-icon">🩻</span>
+                </div>
+                <button class="btn btn-primary" onclick="showSection('analysis')">
+                    Start X-Ray Analysis
+                </button>
+            </div>
+        </section>
+
+        <!-- =====================================
+             2. X-RAY ANALYSIS SECTION
+             ===================================== -->
+        <section id="analysisSection" class="dashboard-section hidden">
+            <div class="section-heading">
+                <div>
+                    <span class="section-badge">AI Diagnostic Pipeline</span>
+                    <h2>Chest X-Ray Analysis & Heatmap Interpretation</h2>
+                    <p>Upload a chest X-ray image or choose a demo sample for AI classification and Grad-CAM visual explanation.</p>
+                </div>
+                <button class="btn btn-outline" onclick="showSection('dashboard')">
+                    ← Back to Dashboard
+                </button>
+            </div>
+
+            <div class="analysis-layout">
+                <!-- Upload Box -->
+                <div class="dashboard-card upload-card">
+                    <div id="dropZone" class="drop-zone">
+                        <div class="upload-icon">🩻</div>
+                        <h3>Upload Chest X-Ray</h3>
+                        <p>JPG, JPEG, PNG or WEBP (Max 10MB)</p>
+                        <label for="xrayFile" class="btn btn-outline">Choose Local Image</label>
+                        <input type="file" id="xrayFile" accept="image/jpeg,image/jpg,image/png,image/webp" hidden>
+                        <p id="selectedFile" class="selected-file">No file selected</p>
+                    </div>
+
+                    <!-- Quick Sample Loader -->
+                    <div class="sample-preset-container">
+                        <span class="sample-title">⚡ Or try 1-click test samples:</span>
+                        <div class="sample-buttons">
+                            <button type="button" class="btn-sample sample-normal" onclick="loadSampleXray('normal')">
+                                🟢 Normal Sample
+                            </button>
+                            <button type="button" class="btn-sample sample-pneumonia" onclick="loadSampleXray('pneumonia')">
+                                🔴 Pneumonia Sample
+                            </button>
+                        </div>
+                    </div>
+
+                    <button id="analyzeButton" class="btn btn-primary full-width" onclick="analyzeXray()" disabled>
+                        <span>✨</span> Predict & Analyze Image
+                    </button>
+                    <div id="analysisMessage" class="message"></div>
+                </div>
+
+                <!-- Preview Box -->
+                <div class="dashboard-card preview-card">
+                    <div class="card-header">
+                        <div>
+                            <h3>Original X-Ray Preview</h3>
+                            <p>Image ready for diagnostic processing</p>
+                        </div>
+                        <span class="card-icon">👁️</span>
+                    </div>
+                    <div id="imagePreviewContainer" class="image-preview-container">
+                        <div class="empty-preview">
+                            <span>🖼️</span>
+                            <p>Your image preview will appear here.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Card -->
+            <div id="resultCard" class="dashboard-card result-card hidden">
+                <div class="result-header">
+                    <div>
+                        <span class="section-badge pulse-badge">Analysis Complete</span>
+                        <h2>AI Classification & Risk Assessment</h2>
+                    </div>
+                    <div class="result-header-actions">
+                        <div id="riskBadge" class="risk-badge risk-low">LOW RISK</div>
+                        <button id="downloadReportBtn" class="btn btn-outline btn-sm" onclick="downloadReport()" type="button">
+                            📄 Export PDF / HTML Report
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Metric Summary Bar -->
+                <div class="result-grid">
+                    <div class="result-box prediction-box">
+                        <span class="result-box-label">Classification Result</span>
+                        <div class="result-box-val-row">
+                            <strong id="predictionResult" class="prediction-badge">-</strong>
+                        </div>
+                    </div>
+                    <div class="result-box confidence-box">
+                        <span class="result-box-label">Model Confidence</span>
+                        <div class="confidence-meter-container">
+                            <strong id="confidenceResult" class="confidence-text">-</strong>
+                            <div class="confidence-progress-bar">
+                                <div id="confidenceFill" class="confidence-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="result-box file-box">
+                        <span class="result-box-label">Source File</span>
+                        <strong id="filenameResult" class="file-text">-</strong>
+                    </div>
+                </div>
+
+                <!-- Grad-CAM Dual Viewer & Opacity Slider -->
+                <div id="gradcamSection" class="explanation-box gradcam-box hidden">
+                    <div class="card-header gradcam-header">
+                        <div>
+                            <h3>🧠 Grad-CAM Heatmap Visual Explanation</h3>
+                            <p>Visual attention map showing exact anatomical regions influencing the AI prediction.</p>
+                        </div>
+                        <div class="viewer-actions">
+                            <button type="button" class="btn btn-outline btn-sm" onclick="openLightboxModal()">
+                                🔍 Fullscreen Inspector
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="gradcamLoading" class="message">Generating visual attention heatmap...</div>
+
+                    <!-- Interactive Dual Viewer -->
+                    <div id="dualViewerContainer" class="dual-viewer-container">
+                        <!-- Heatmap Overlay Slider -->
+                        <div class="opacity-controls">
+                            <label for="opacitySlider"><strong>Heatmap Blend Opacity:</strong> <span id="opacityVal">75%</span></label>
+                            <input type="range" id="opacitySlider" min="0" max="100" value="75" oninput="updateHeatmapOpacity(this.value)">
+                        </div>
+
+                        <div class="viewer-layout-row">
+                            <!-- Blended Overlay View -->
+                            <div class="viewer-card">
+                                <h4>Grad-CAM Heatmap Overlay</h4>
+                                <div id="blendedViewWrapper" class="image-wrapper">
+                                    <img id="baseXrayImg" src="" alt="Original Chest X-Ray" class="base-xray-img">
+                                    <img id="gradcamOverlayImg" src="" alt="Grad-CAM Overlay" class="gradcam-overlay-img">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Heatmap Color Scale Legend -->
+                        <div class="heatmap-legend">
+                            <span class="legend-title">Activation Scale:</span>
+                            <div class="legend-bar"></div>
+                            <div class="legend-labels">
+                                <span>Low Attention (Clear)</span>
+                                <span>Medium Attention</span>
+                                <span>High Attention (Opacities/Foci)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grad-CAM Textual Explanation -->
+                    <div class="gradcam-explanation-text-card">
+                        <h4>🔍 Visual Heatmap Interpretation:</h4>
+                        <p id="gradcamExplanationResult">Generating heatmap interpretation...</p>
+                    </div>
+
+                    <p class="chat-disclaimer">
+                        Grad-CAM (Gradient-weighted Class Activation Mapping) visualizes model neuron weights for interpretability. It is not a clinical diagnosis.
+                    </p>
+                </div>
+
+                <!-- AI Clinical Explanation -->
+                <div class="explanation-box ai-explanation-box">
+                    <h3>💡 AI Clinical Screening Summary</h3>
+                    <div class="explanation-content">
+                        <p id="explanationResult">The AI model has completed analysis.</p>
+                    </div>
+                </div>
+
+                <!-- Chat Box -->
+                <div class="chat-box">
+                    <div class="chat-header">
+                        <div>
+                            <h3>💬 Diagnostic AI Assistant</h3>
+                            <p>Ask questions about this scan, symptoms, or the classification results.</p>
+                        </div>
+                    </div>
+                    <div id="chatMessages" class="chat-messages">
+                        <div class="ai-message">
+                            <strong>AI Assistant</strong>
+                            <p>Hello! Your X-Ray analysis is complete. Ask me any questions about the prediction or Grad-CAM heatmap!</p>
+                        </div>
+                    </div>
+
+                    <!-- Related / Suggested Questions -->
+                    <div class="chat-suggestions-container" id="chatSuggestionsContainer">
+                        <div class="chat-suggestions-header">
+                            <span class="chat-suggestions-title">💡 Related Questions for Analysis:</span>
+                            <span class="chat-suggestions-subtitle">Click any question to ask AI</span>
+                        </div>
+                        <div class="chat-suggestions-chips" id="chatSuggestionsChips">
+                            <!-- Dynamically generated based on current scan result -->
+                        </div>
+                    </div>
+
+                    <div class="chat-input-row">
+                        <input type="text" id="chatInput" placeholder="e.g., Explain what the red heatmap zone indicates...">
+                        <button class="btn btn-primary" onclick="sendChatMessage()">Send</button>
+                    </div>
+                    <p class="chat-disclaimer">
+                        AI responses are for educational assistance only and are not medical diagnoses.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- =====================================
+             3. HISTORY SECTION
+             ===================================== -->
+        <section id="historySection" class="dashboard-section hidden">
+            <div class="section-heading">
+                <div>
+                    <span class="section-badge">Records</span>
+                    <h2>Analysis History</h2>
+                    <p>Your previous AI-assisted X-ray analyses.</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline" onclick="loadHistory()" type="button">Refresh</button>
+                    <button class="btn btn-outline" onclick="showSection('dashboard')" type="button">← Dashboard</button>
+                </div>
+            </div>
+            <div id="historyContainer" class="history-container">
+                <div class="loading-card">Loading history...</div>
+            </div>
+        </section>
+
+        <!-- =====================================
+             4. PATIENT PROFILE SECTION
+             ===================================== -->
+        <section id="profileSection" class="dashboard-section hidden">
+            <div class="section-heading">
+                <div>
+                    <span class="section-badge">Account</span>
+                    <h2>Patient Profile</h2>
+                    <p>Your personal information and medical ID.</p>
+                </div>
+                <button class="btn btn-outline" onclick="showSection('dashboard')">
+                    ← Dashboard
+                </button>
+            </div>
+            <div class="dashboard-card profile-card">
+                <div class="profile-field">
+                    <span>Patient ID</span>
+                    <strong id="profilePatientId">-</strong>
+                </div>
+                <div class="profile-field">
+                    <span>Full Name</span>
+                    <strong id="profileName">-</strong>
+                </div>
+                <div class="profile-field">
+                    <span>Email</span>
+                    <strong id="profileEmail">-</strong>
+                </div>
+                <div class="profile-field">
+                    <span>Age</span>
+                    <strong id="profileAge">-</strong>
+                </div>
+                <div class="profile-field">
+                    <span>Gender</span>
+                    <strong id="profileGender">-</strong>
+                </div>
+                <div class="profile-field">
+                    <span>Phone</span>
+                    <strong id="profilePhone">-</strong>
+                </div>
+            </div>
+        </section>
+
+        <!-- =====================================
+             5. REPORTS SECTION
+             ===================================== -->
+        <section id="reportsSection" class="dashboard-section hidden">
+            <div class="section-heading">
+                <div>
+                    <span class="section-badge">Documents</span>
+                    <h2>Medical Reports</h2>
+                    <p>Download your analysis reports.</p>
+                </div>
+                <button class="btn btn-outline" onclick="showSection('dashboard')">
+                    ← Dashboard
+                </button>
+            </div>
+            <div id="reportsContainer" class="reports-container">
+                <div class="loading-card">Loading reports...</div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Lightbox Inspection Modal -->
+    <div id="lightboxModal" class="lightbox-modal hidden" onclick="closeLightboxModal(event)">
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <div class="lightbox-header">
+                <h3>🔍 High-Res X-Ray & Grad-CAM Inspector</h3>
+                <button type="button" class="lightbox-close" onclick="closeLightboxModal()">&times;</button>
+            </div>
+            <div class="lightbox-body">
+                <img id="lightboxImage" src="" alt="High-Res Inspection">
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================
+         JAVASCRIPT SCRIPTS
+         ========================================= -->
+    <script src="dashboard.js"></script>
+    <script src="ai-assistant.js"></script>
+
+</body>
+
+</html>

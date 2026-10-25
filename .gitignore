@@ -1,0 +1,62 @@
+
+# ==============================
+# Python cache files
+# ==============================
+__pycache__/
+*.py[cod]
+*.pyo
+
+# ==============================
+# Virtual environments
+# ==============================
+.venv/
+venv/
+env/
+
+# ==============================
+# Environment variables and secrets
+# ==============================
+.env
+.env.*
+!.env.example
+
+# ==============================
+# Local databases
+# ==============================
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# ==============================
+# Uploaded X-rays and generated files
+# ==============================
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+backend/gradcam/*
+!backend/gradcam/.gitkeep
+
+backend/reports/*
+!backend/reports/.gitkeep
+
+# ==============================
+# Jupyter temporary files
+# ==============================
+.ipynb_checkpoints/
+
+# ==============================
+# Operating system and editor files
+# ==============================
+.DS_Store
+Thumbs.db
+.vscode/
+
+# ==============================
+# Logs and temporary files
+# ==============================
+*.log
+*.tmp
+# Medical imaging dataset
+dataset/
