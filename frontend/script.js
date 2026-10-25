@@ -2,7 +2,7 @@
 // AI Medical Image Analysis - Frontend
 // ============================================
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://ai-medical-x-ray-analysis-1.onrender.com";
 
 const USER_SESSION_KEYS = [
     "access_token",

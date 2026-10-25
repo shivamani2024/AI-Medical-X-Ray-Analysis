@@ -3822,7 +3822,7 @@ def startup_event():
 
     print(
         "API documentation: "
-        "http://127.0.0.1:8000/docs"
+        "https://ai-medical-x-ray-analysis-1.onrender.com/docs"
     )
 
     print(
