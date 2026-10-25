@@ -5,7 +5,7 @@
 
 (function () {
 
-    const API_URL = "http://127.0.0.1:8000";
+    const API_URL = "https://ai-medical-x-ray-analysis-1.onrender.com";
 
     let assistantOpen = false;
     let isSending = false;
